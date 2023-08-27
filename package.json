@@ -20,11 +20,11 @@
   "keywords": [],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/metcoder95/<lib_name>.git"
+    "url": "git+https://github.com/metcoder95/one-more-time.git"
   },
-  "readme": "https://github.com/metcoder95/<lib_name>/blob/main/README.md",
+  "readme": "https://github.com/metcoder95/one-more-time/blob/main/README.md",
   "bugs": {
-    "url": "https://github.com/metcoder95/<lib_name>/issues"
+    "url": "https://github.com/metcoder95/one-more-time/issues"
   },
   "author": "metcoder95 <me@metcoder.dev>",
   "license": "MIT",
