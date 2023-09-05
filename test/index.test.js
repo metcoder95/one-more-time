@@ -8,7 +8,7 @@ const { Task } = require('../lib/task')
 const Retry = require('..')
 
 test('Retry#Module', suite => {
-  suite.plan(3)
+  suite.plan(4)
   suite.comment(
     'Any breaking change in this suite should be considered a major version bump.'
   )
@@ -54,10 +54,31 @@ test('Retry#Module', suite => {
     t.equal(typeof retry.run, 'function')
     t.equal(retry.run.length, 1)
   })
+
+  suite.test('Should throw on invalid options', t => {
+    t.plan(9)
+
+    t.throws(() => new Retry({ maxTimeout: 'foo' }), 'maxTimeout must be positive integer')
+    t.throws(() => new Retry({ maxTimeout: -1 }), 'maxTimeout must be positive integer')
+    t.throws(() => new Retry({ minTimeout: -1 }), 'minTimeout must be a positive integer and less than maxTimeout')
+    t.throws(() => new Retry({ minTimeout: '' }), 'minTimeout must be a positive integer and less than maxTimeout')
+    t.throws(() => new Retry({ minTimeout: 10, maxTimeout: 5 }), 'minTimeout must be a positive integer and less than maxTimeout')
+    t.throws(() => new Retry({ factor: -1 }), 'factor must be a positive integer')
+    t.throws(() => new Retry({ factor: '' }), 'factor must be a positive integer')
+    t.throws(() => new Retry({ retries: 0 }), 'retries must be positive integer')
+    t.throws(() => new Retry({ retries: false }), 'retries must be positive integer')
+  })
 })
 
 test('Retry#pick', suite => {
-  suite.plan(2)
+  suite.plan(3)
+
+  suite.test('Should throw on invalid options', t => {
+    t.plan(2)
+
+    t.throws(() => new Retry().pick({ id: 1 }), 'id must be a string')
+    t.throws(() => new Retry().pick({ signal: 1 }), 'invalid signal')
+  })
 
   suite.test('Should return a task', t => {
     const retry = new Retry()
@@ -86,9 +107,18 @@ test('Retry#pick', suite => {
 })
 
 test('Retry#run', suite => {
-  suite.plan(3)
+  suite.plan(4)
+
+  suite.test('Should throw on invalid options', t => {
+    t.plan(2)
+
+    t.throws(() => new Retry().run(1), 'task must be a function')
+    t.throws(() => new Retry().run(() => {}, { shouldRetry: 1 }), 'shouldRetry must be a function')
+  })
 
   suite.test('Should execute a given function', async t => {
+    let timeoutCalled = false
+    let retryCalled = false
     let counter = 0
     let retryCounter = 0
     const foo = () => {
@@ -105,13 +135,19 @@ test('Retry#run', suite => {
       return true
     }
 
-    t.plan(3)
+    t.plan(5)
     const retry = new Retry()
+
+    retry.once('timeout', () => { timeoutCalled = true })
+    retry.once('retry', () => { retryCalled = true })
+
     const result = await retry.run(foo, { shouldRetry })
 
     t.equal(result, 'bar')
     t.equal(counter, 3)
     t.equal(retryCounter, 2)
+    t.ok(timeoutCalled)
+    t.ok(retryCalled)
   })
 
   suite.test(
@@ -128,12 +164,13 @@ test('Retry#run', suite => {
           return 'bar'
         }
       }
-      const shouldRetry = () => {
+      const shouldRetry = (err) => {
         retryCounter++
+        t.type(err, Error)
         return true
       }
 
-      t.plan(3)
+      t.plan(5)
       const retry = new Retry()
       const result = await retry.run(foo, {
         shouldRetry,

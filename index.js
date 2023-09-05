@@ -100,15 +100,15 @@ class Retry extends EventEmitter {
 
         if (res.then != null && typeof res.then === 'function') {
           return res.then(
-            (...args) => {
-              resolve(...args)
+            (result) => {
+              resolve(result)
             },
             error => {
               if (shouldRetry(error) && task.shouldRetry(error)) {
                 return task.timeout().then(() => exec(promise, resolve, reject))
               }
 
-              throw error
+              reject(error)
             }
           )
         }
