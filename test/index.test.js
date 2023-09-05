@@ -58,15 +58,42 @@ test('Retry#Module', suite => {
   suite.test('Should throw on invalid options', t => {
     t.plan(9)
 
-    t.throws(() => new Retry({ maxTimeout: 'foo' }), 'maxTimeout must be positive integer')
-    t.throws(() => new Retry({ maxTimeout: -1 }), 'maxTimeout must be positive integer')
-    t.throws(() => new Retry({ minTimeout: -1 }), 'minTimeout must be a positive integer and less than maxTimeout')
-    t.throws(() => new Retry({ minTimeout: '' }), 'minTimeout must be a positive integer and less than maxTimeout')
-    t.throws(() => new Retry({ minTimeout: 10, maxTimeout: 5 }), 'minTimeout must be a positive integer and less than maxTimeout')
-    t.throws(() => new Retry({ factor: -1 }), 'factor must be a positive integer')
-    t.throws(() => new Retry({ factor: '' }), 'factor must be a positive integer')
-    t.throws(() => new Retry({ retries: 0 }), 'retries must be positive integer')
-    t.throws(() => new Retry({ retries: false }), 'retries must be positive integer')
+    t.throws(
+      () => new Retry({ maxTimeout: 'foo' }),
+      'maxTimeout must be positive integer'
+    )
+    t.throws(
+      () => new Retry({ maxTimeout: -1 }),
+      'maxTimeout must be positive integer'
+    )
+    t.throws(
+      () => new Retry({ minTimeout: -1 }),
+      'minTimeout must be a positive integer and less than maxTimeout'
+    )
+    t.throws(
+      () => new Retry({ minTimeout: '' }),
+      'minTimeout must be a positive integer and less than maxTimeout'
+    )
+    t.throws(
+      () => new Retry({ minTimeout: 10, maxTimeout: 5 }),
+      'minTimeout must be a positive integer and less than maxTimeout'
+    )
+    t.throws(
+      () => new Retry({ factor: -1 }),
+      'factor must be a positive integer'
+    )
+    t.throws(
+      () => new Retry({ factor: '' }),
+      'factor must be a positive integer'
+    )
+    t.throws(
+      () => new Retry({ retries: 0 }),
+      'retries must be positive integer'
+    )
+    t.throws(
+      () => new Retry({ retries: false }),
+      'retries must be positive integer'
+    )
   })
 })
 
@@ -107,13 +134,16 @@ test('Retry#pick', suite => {
 })
 
 test('Retry#run', suite => {
-  suite.plan(4)
+  suite.plan(5)
 
   suite.test('Should throw on invalid options', t => {
     t.plan(2)
 
     t.throws(() => new Retry().run(1), 'task must be a function')
-    t.throws(() => new Retry().run(() => {}, { shouldRetry: 1 }), 'shouldRetry must be a function')
+    t.throws(
+      () => new Retry().run(() => {}, { shouldRetry: 1 }),
+      'shouldRetry must be a function'
+    )
   })
 
   suite.test('Should execute a given function', async t => {
@@ -138,8 +168,12 @@ test('Retry#run', suite => {
     t.plan(5)
     const retry = new Retry()
 
-    retry.once('timeout', () => { timeoutCalled = true })
-    retry.once('retry', () => { retryCalled = true })
+    retry.once('timeout', () => {
+      timeoutCalled = true
+    })
+    retry.once('retry', () => {
+      retryCalled = true
+    })
 
     const result = await retry.run(foo, { shouldRetry })
 
@@ -164,7 +198,7 @@ test('Retry#run', suite => {
           return 'bar'
         }
       }
-      const shouldRetry = (err) => {
+      const shouldRetry = err => {
         retryCounter++
         t.type(err, Error)
         return true
@@ -198,4 +232,42 @@ test('Retry#run', suite => {
 
     t.equal(counter, 4)
   })
+
+  suite.test(
+    'Should be aborted if signal is passed',
+    { skip: (AbortController || null) == null },
+    async t => {
+      let abortReason
+      let counter = 0
+      let abortedCalled = false
+      const reason = new Error('aborted!')
+      const retry = new Retry()
+      const controller = new AbortController()
+      const foo = () => {
+        counter++
+
+        if (counter < 3) {
+          throw new Error('foo')
+        }
+
+        controller.abort(reason)
+      }
+
+      t.plan(4)
+
+      retry.once('abort', err => {
+        abortedCalled = true
+        abortReason = err
+      })
+
+      await t.rejects(
+        retry.run.bind(retry, foo, { signal: controller.signal }),
+        'foo'
+      )
+
+      t.equal(counter, 3)
+      t.ok(abortedCalled)
+      t.equal(abortReason, reason)
+    }
+  )
 })
