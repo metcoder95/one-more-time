@@ -6,6 +6,7 @@ const { test } = require('tap')
 const { Task } = require('../lib/task')
 
 const Retry = require('..')
+const dosNotHaveAC = (AbortController || null) == null
 
 test('Retry#Module', suite => {
   suite.plan(4)
@@ -116,25 +117,29 @@ test('Retry#pick', suite => {
     t.type(retry.pick({}), Task)
   })
 
-  suite.test('Should return a task with right defaults', t => {
-    const retry = new Retry()
+  suite.test(
+    'Should return a task with right defaults',
+    { skip: dosNotHaveAC },
+    t => {
+      const retry = new Retry()
 
-    t.plan(2)
+      t.plan(2)
 
-    const task = retry.pick({
-      id: 'foo',
-      signal: new AbortController().signal,
-      retries: 1,
-      currentTimeout: 1000
-    })
+      const task = retry.pick({
+        id: 'foo',
+        signal: new AbortController().signal,
+        retries: 1,
+        currentTimeout: 1000
+      })
 
-    t.equal(task.id, 'foo')
-    t.type(task, Task)
-  })
+      t.equal(task.id, 'foo')
+      t.type(task, Task)
+    }
+  )
 })
 
 test('Retry#run', suite => {
-  suite.plan(5)
+  suite.plan(6)
 
   suite.test('Should throw on invalid options', t => {
     t.plan(2)
@@ -235,7 +240,7 @@ test('Retry#run', suite => {
 
   suite.test(
     'Should be aborted if signal is passed',
-    { skip: (AbortController || null) == null },
+    { skip: dosNotHaveAC },
     async t => {
       let abortReason
       let counter = 0
@@ -268,6 +273,28 @@ test('Retry#run', suite => {
       t.equal(counter, 3)
       t.ok(abortedCalled)
       t.equal(abortReason, reason)
+    }
+  )
+
+  suite.test(
+    'Should throw an error if signal already aborted',
+    { skip: dosNotHaveAC },
+    async t => {
+      const reason = new Error('aborted!')
+      const retry = new Retry()
+      const controller = new AbortController()
+      const foo = () => {
+        t.fail('foo should not be called')
+      }
+
+      t.plan(1)
+
+      controller.abort(reason)
+
+      await t.rejects(
+        retry.run.bind(retry, foo, { signal: controller.signal }),
+        new Error('task aborted')
+      )
     }
   )
 })

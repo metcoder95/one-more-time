@@ -13,9 +13,9 @@ test('Retry/Task', suite => {
 
   suite.test('Should expose right APIs', t => {
     const retry = new Retry()
-    const task = retry.pick()
+    const task = retry.pick({ signal: new AbortController().signal })
 
-    t.plan(13)
+    t.plan(14)
     t.type(task, Task)
     t.equal(typeof task.start, 'function')
     t.equal(task.start.length, 0)
@@ -29,6 +29,7 @@ test('Retry/Task', suite => {
     t.notOk(task.rootError)
     t.match(task.history, [])
     t.notOk(task.aborted)
+    t.type(task.signal, AbortSignal)
   })
 
   suite.test(

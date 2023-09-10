@@ -95,6 +95,11 @@ class Retry extends EventEmitter {
         ;({ resolve, reject, promise } = getDeferredPromise())
       }
 
+      if (task.aborted) {
+        reject(new Error('task aborted', { cause: task.signal.reason }))
+        return promise
+      }
+
       try {
         const res = fn(task)
 
