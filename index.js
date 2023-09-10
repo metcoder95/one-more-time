@@ -1,5 +1,5 @@
 'use strict'
-const { EventEmitter } = require('events')
+const { EventEmitter } = require('node:events')
 
 const { kInternalIDCounter, kTaskOptions } = require('./lib/symbols')
 
@@ -9,8 +9,8 @@ const { Task } = require('./lib/task')
 
 class Retry extends EventEmitter {
   constructor ({
-    maxTimeout, // In seconds
-    minTimeout, // In seconds
+    maxTimeout, // In ms
+    minTimeout, // In ms
     factor,
     retries
   } = {}) {
