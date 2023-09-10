@@ -1,5 +1,5 @@
 {
-  "name": "one-more-time",
+  "name": "@metcoder95/one-more-time",
   "version": "0.1.0",
   "description": "Retry library with a focus on flow control",
   "main": "index.js",
