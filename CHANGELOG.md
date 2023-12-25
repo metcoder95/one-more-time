@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/metcoder95/one-more-time/compare/v0.1.0...v1.0.0) (2023-12-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop support for older Node
+
+### Features
+
+* drop support for older Node ([4c534ff](https://github.com/metcoder95/one-more-time/commit/4c534ffbdecbcea6b8f06924182fb489572edf52))
+
 ## 0.1.0 (2023-09-10)
 
 
