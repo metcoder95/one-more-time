@@ -15,7 +15,7 @@
     "release": "npx standard-version"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "keywords": [],
   "repository": {
